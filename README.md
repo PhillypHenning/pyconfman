@@ -44,6 +44,14 @@ from pyconfman import Schema
 config=Schema({"foo": "bar"})
 ```
 
+### Specify the default config file to load
+```python
+from pyconfman import Schema
+
+config=Schema(default_config="default_config.yaml")
+```
+
+
 ### Specify the config file to load
 ```python
 from pyconfman import Schema
@@ -52,7 +60,7 @@ config=Schema(filepath="another_config.yaml")
 ```
 
 
-## Loading breakdown
+## Schema Loading breakdown
 __init__
   1. Load the hard-coded defaults
   2. Load (and override) using the "default config" file if present
