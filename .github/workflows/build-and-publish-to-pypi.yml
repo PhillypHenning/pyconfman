@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/pyconfman
+      url: https://pypi.org/p/pyconfman2
     permissions:
       id-token: write
     steps:
