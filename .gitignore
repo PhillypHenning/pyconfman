@@ -9,3 +9,7 @@ __pycache__/
 
 # Testing
 testing/
+
+# README
+default_config.yaml
+another_config.yaml

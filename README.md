@@ -13,36 +13,39 @@ python -m pip install pyconfman2
 In it's most basic form, a Schema can be created which will load a local "config.yaml" or "config.yml" file present.
 
 ```python
-from pyconfman2 import Schema
-
-config=ConfigSchema()
+>>> from pyconfman2 import Schema
+>>> config = Schema.ConfigSchema()
+>>> print(config)
+{}
 ```
 
 ### Provide a default config
 ```python
-from pyconfman2 import Schema
-
-config=ConfigSchema({"foo": "bar"})
+>>> from pyconfman2 import Schema
+>>> config=Schema.ConfigSchema({"foo": "bar"})
+>>> print(config)
+{'foo': 'bar'}
 ```
 
 ### Specify the default config file to load
 ```python
-from pyconfman2 import Schema
-
-config=ConfigSchema(default_config="default_config.yaml")
+>>> from pyconfman2 import Schema
+>>> config=Schema.ConfigSchema(default_config="default_config.yaml")
+>>> print(config)
+{'foo': 'bar', 'zoo': {'jar': ['car', 'far']}}
 ```
 
 
 ### Specify the config file to load
 ```python
-from pyconfman2 import Schema
-
-config=ConfigSchema(filepath="another_config.yaml")
+>>> from pyconfman2 import Schema
+>>> config=Schema.ConfigSchema(default_config="default_config.yaml", filepath="another_config.yaml")
+>>> print(config)
+{'foo': 'overwritten_by_another_config', 'zoo': {'jar': ['car', 'far']}}
 ```
 
 
 ## Schema Loading breakdown
-__init__
-  1. Load the hard-coded defaults
-  2. Load (and override) using the "default config" file if present
-  3. Load (and override) using the config file if present
+1. Load the hard-coded defaults
+2. Load (and override) using the "default config" file if present
+3. Load (and override) using the config file if present
