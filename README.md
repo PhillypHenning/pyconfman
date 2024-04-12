@@ -15,21 +15,21 @@ In it's most basic form, a Schema can be created which will load a local "config
 ```python
 from pyconfman2 import Schema
 
-config=Schema()
+config=ConfigSchema()
 ```
 
 ### Provide a default config
 ```python
 from pyconfman2 import Schema
 
-config=Schema({"foo": "bar"})
+config=ConfigSchema({"foo": "bar"})
 ```
 
 ### Specify the default config file to load
 ```python
 from pyconfman2 import Schema
 
-config=Schema(default_config="default_config.yaml")
+config=ConfigSchema(default_config="default_config.yaml")
 ```
 
 
@@ -37,7 +37,7 @@ config=Schema(default_config="default_config.yaml")
 ```python
 from pyconfman2 import Schema
 
-config=Schema(filepath="another_config.yaml")
+config=ConfigSchema(filepath="another_config.yaml")
 ```
 
 
