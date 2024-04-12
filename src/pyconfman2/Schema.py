@@ -61,7 +61,3 @@ class ConfigSchema():
             config_file = yaml.safe_load(fh)
         
         self.add(config_file)
-
-def load_schema_as_constants(schema):
-    for k in schema:
-        globals()[k.upper()] = schema[k]
