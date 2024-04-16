@@ -61,3 +61,6 @@ class ConfigSchema():
             config_file = yaml.safe_load(fh)
         
         self.add(config_file)
+    
+    def items(self):
+        return self.properties.items()
