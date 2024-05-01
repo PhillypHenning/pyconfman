@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyconfman2"
-version = "0.1.5"
+version = "0.1.6"
 authors = [
   { name="Phillyp Henning", email="phillyp.henning@gmail.com" },
 ]
@@ -15,6 +15,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+  "yaml",
 ]
 
 [project.urls]
