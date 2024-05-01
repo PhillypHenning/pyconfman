@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyconfman2"
-version = "0.1.7"
+version = "0.1.8"
 authors = [
   { name="Phillyp Henning", email="phillyp.henning@gmail.com" },
 ]

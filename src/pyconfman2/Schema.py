@@ -58,9 +58,9 @@ class ConfigSchema():
             raise FileNotFoundException
         
         with open(filepath, "r") as fh:
-            config_file = yaml.safe_load(fh)
-        
-        self.add(config_file)
+            config = yaml.safe_load(fh)
+
+        self.properties = config
     
     def items(self):
         return self.properties.items()
