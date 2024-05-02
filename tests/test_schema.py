@@ -19,11 +19,11 @@ class TestSchemaClass(unittest.TestCase):
     
     def test_init_with_default_config_override(self):
         test_init_schema = ConfigSchema(default_config="test_default_config.yml")
-        self.assertEqual(str(test_init_schema), "{'file_loaded': 'yaml', 'testing': 'default'}")
+        self.assertEqual(str(test_init_schema), "{'testing': 'default'}")
     
     def test_init_with_default_schema(self):
         default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", 'file_loaded': 'yaml'}
+        validated_schema = { "fookey": "foo", "barkey": "bar"}
         test_default_schema = ConfigSchema(default_schema)
         self.assertEqual(str(test_default_schema), str(validated_schema))
     
@@ -72,7 +72,7 @@ class TestSchemaClass(unittest.TestCase):
     # Add
     def test_add_new_key_and_value(self):
         default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", 'file_loaded': 'yaml', "newkey": "value"}
+        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value"}
         
         test_schema = ConfigSchema(default_schema)
         test_schema.add("newkey", "value")
@@ -82,7 +82,7 @@ class TestSchemaClass(unittest.TestCase):
     def test_add_new_dict(self):
         default_schema = { "fookey": "foo", "barkey": "bar" }
         new_value = { "newkey": "value" }
-        validated_schema = { "fookey": "foo", "barkey": "bar",'file_loaded': 'yaml', "newkey": "value" }
+        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
 
         test_schema = ConfigSchema(default_schema)
         test_schema.add(new_value)
@@ -92,7 +92,7 @@ class TestSchemaClass(unittest.TestCase):
     def test_add_new_dict_with_override(self):
         default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
         new_value = { "newkey": "new_value", "newkey_2": "new_value" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "new_value", 'file_loaded': 'yaml', "newkey_2": "new_value" }
+        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "new_value", "newkey_2": "new_value" }
 
         test_schema = ConfigSchema(default_schema)
         test_schema.add(new_value)
@@ -102,7 +102,7 @@ class TestSchemaClass(unittest.TestCase):
     def test_add_new_dict_without_override(self):
         default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
         new_value = { "newkey": "new_value", "newkey_2": "new_value" }
-        validated_schema = {"newkey": "value", "newkey_2": "new_value", "fookey": "foo", "barkey": "bar", 'file_loaded': 'yaml'}
+        validated_schema = {"newkey": "value", "newkey_2": "new_value", "fookey": "foo", "barkey": "bar"}
 
         test_schema = ConfigSchema(default_schema)
         test_schema.add(new_value, override=False)
@@ -140,7 +140,7 @@ class TestSchemaClass(unittest.TestCase):
     # Remove
     def test_remove_valid_key(self):
         default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "barkey": "bar", 'file_loaded': 'yaml' }
+        validated_schema = { "barkey": "bar"}
 
         test_schema = ConfigSchema(default_schema)
         test_schema.remove("fookey")
@@ -149,7 +149,7 @@ class TestSchemaClass(unittest.TestCase):
 
     def test_remove_invalid_key_not_strict(self):
         default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", 'file_loaded': 'yaml' }
+        validated_schema = { "fookey": "foo", "barkey": "bar"}
 
         test_schema = ConfigSchema(default_schema)
         test_schema.remove("no_key")
@@ -169,7 +169,6 @@ class TestSchemaClass(unittest.TestCase):
     # Load
     def test_load_valid_file(self):
         validated_schema = {
-            'file_loaded': 'yaml',
             "specific": True,
             "learn": 194.3,
             "fish": {
@@ -188,6 +187,13 @@ class TestSchemaClass(unittest.TestCase):
             "lot": False
         }
 
-        test_schema = ConfigSchema(default_schema={})
+        test_schema = ConfigSchema()
         test_schema.load("test_schema_config.yml")
         self.assertEqual(str(test_schema), str(validated_schema))
+
+    def test_class_is_iterable(self):
+        test_schema = ConfigSchema(filepath="test_list_schema.yml")
+        test_target_1 = [x for x in test_schema]
+        test_target_2 = [x for x in test_schema if x.get("value") == "a"]
+        self.assertEqual(test_target_1, [{'key': 1, 'value': 'a'}, {'key': 2, 'value': 'b'}, {'key': 3, 'value': 'c'}])
+        self.assertEqual(test_target_2, [{'key': 1, 'value': 'a'}])
