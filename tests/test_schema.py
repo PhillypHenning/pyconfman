@@ -2,10 +2,10 @@ import os
 import sys
 import unittest
 
-sys.path.append("../src/pyconfman2")
+sys.path.append("../src")
 
-from Schema import ConfigSchema
-from Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
+from pyconfman2.Schema import ConfigSchema
+from pyconfman2.Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
 
 class TestSchemaClass(unittest.TestCase):
     # Initialization

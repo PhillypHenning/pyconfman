@@ -1,7 +1,7 @@
 import os
 import yaml
 
-from Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
+from .Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
 
 class ConfigSchema():
     properties = None
