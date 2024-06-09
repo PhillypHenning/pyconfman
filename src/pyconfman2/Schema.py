@@ -1,78 +1,80 @@
 import os
 import yaml
-
 from .Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
 
-class ConfigSchema():
-    properties = None
-    current_idx = -1
-
-    def __init__(self, default_schema={}, filepath=None, default_config=None) -> None:
-        if type(default_schema) != dict:
-            raise InvalidPropertyError
+class ConfigSchema:
+    def __init__(self, default_schema=None, filepath=None, default_config=None) -> None:
+        if default_schema is None:
+            default_schema = {}
+        
+        if not isinstance(default_schema, dict):
+            raise InvalidPropertyError("default_schema must be a dictionary.")
         
         self.properties = default_schema
-        
-        # Default Config is either: Provided or is searched for via "Config.y(a)ml" files
-        if default_config:
-            if os.path.isfile(default_config):
-                self.load(default_config)
+        self.current_idx = -1
+
+        # Load default configuration if specified or from file
+        if default_config and os.path.isfile(default_config):
+            self.load(default_config)
+        elif filepath and os.path.isfile(filepath):
+            self.load(filepath)
         elif not filepath:
-            config_file = [item for item in os.listdir() if item == "config.yaml" or item == "config.yml"]
-            for item in config_file:
-                if os.path.getsize(item) > 0:
-                    self.load(item)
-                    break
-        else:
-            if os.path.isfile(filepath):
-                self.load(filepath)
-    
+            config_file = next((item for item in os.listdir() if item in ["config.yaml", "config.yml"]), None)
+            if config_file and os.path.getsize(config_file) > 0:
+                self.load(config_file)
+
     def __str__(self) -> str:
         return str(self.properties)
 
     def __iter__(self):
         self.current_idx = -1
         return self
-    
+
     def __next__(self):
         self.current_idx += 1
         if self.current_idx < len(self.properties):
-            return self.properties[self.current_idx]
+            return list(self.properties.items())[self.current_idx]
         raise StopIteration
-    
+
     def add(self, nkey, nvalue=None, override=True) -> None:
-        if type(nkey) == dict:
+        if isinstance(nkey, dict):
             if override:
                 self.properties.update(nkey)
             else:
-                self.properties = dict(list(nkey.items()) + list(self.properties.items())) 
+                for key, value in nkey.items():
+                    if key not in self.properties:
+                        self.properties[key] = value
         else:
-            if nvalue == None:
-                raise EmptyValueProperty
+            if nvalue is None:
+                raise EmptyValueProperty("Value cannot be None.")
+            if not override and nkey in self.properties:
+                return  # Simply return without updating if key exists and override is False
             self.properties[nkey] = nvalue
-    
+
     def get(self, key, strict=False):
         try:
             return self.properties[key]
         except KeyError as e:
-            if strict: raise e
-    
+            if strict:
+                raise KeyError(f"The key '{key}' does not exist.") from e
+
     def remove(self, key, strict=False):
         try:
             self.properties.pop(key)
         except KeyError as e:
-            if strict: raise e
+            if strict:
+                raise KeyError(f"The key '{key}' does not exist.") from e
 
-    
     def load(self, filepath):
         if not os.path.exists(filepath):
-            raise FileNotFoundException
+            raise FileNotFoundError(f"The file '{filepath}' does not exist.")
         
         with open(filepath, "r") as fh:
-            config = yaml.safe_load(fh)
+            config = yaml.safe_load(fh) or {}
+            if not self.properties or len(self.properties) <= 1:
+                self.properties = config
+            else:
+                self.properties.update(config)
 
-        if not self.properties or not len(self.properties) > 1:
-            self.properties = config
-    
     def items(self):
         return self.properties.items()

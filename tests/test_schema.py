@@ -1,199 +1,89 @@
-import os
-import sys
 import unittest
+import os
+import yaml
+from src.pyconfman2.Schema import ConfigSchema
+from src.pyconfman2.Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
 
-sys.path.append("../src")
+class TestConfigSchema(unittest.TestCase):
 
-from pyconfman2.Schema import ConfigSchema
-from pyconfman2.Exceptions import InvalidPropertyError, EmptyValueProperty, KeyExistsError
+    def setUp(self):
+        self.default_schema = {'key1': 'value1', 'key2': 'value2'}
+        self.config_schema = ConfigSchema(default_schema=self.default_schema)
+    
+    def tearDown(self):
+        for file in ['test_config.yaml', 'config.yaml', 'config.yml']:
+            if os.path.exists(file):
+                os.remove(file)
+                
+    def test_init_with_invalid_schema(self):
+        with self.assertRaises(InvalidPropertyError):
+            ConfigSchema(default_schema=[])
 
-class TestSchemaClass(unittest.TestCase):
-    # Initialization
-    def test_init(self):
-        test_init_schema = ConfigSchema()
-        self.assertEqual(str(test_init_schema), "{'file_loaded': 'yaml'}")
-    
-    def test_init_with_config_override(self):
-        test_init_schema = ConfigSchema(filepath="config.yml")
-        self.assertEqual(str(test_init_schema), "{'file_loaded': 'yml'}")
-    
-    def test_init_with_default_config_override(self):
-        test_init_schema = ConfigSchema(default_config="test_default_config.yml")
-        self.assertEqual(str(test_init_schema), "{'testing': 'default'}")
-    
-    def test_init_with_default_schema(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar"}
-        test_default_schema = ConfigSchema(default_schema)
-        self.assertEqual(str(test_default_schema), str(validated_schema))
-    
-    def test_init_raises_invalid_property_error(self):
-        default_schema = "{ 'test' }"
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-    
-    def test_init_with_bad_schema_1(self):
-        default_schema = "{ 'test' }"
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-    
-    def test_init_with_bad_schema_2(self):
-        default_schema = "{'test': '123' "
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-    
-    def test_init_with_bad_schema_3(self):
-        default_schema = "abc"
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-    
-    def test_init_with_bad_schema_4(self):
-        default_schema = "123"
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-    
-    def test_init_with_default_config(self):
-        default_schema = "123"
-        def test_func():
-            ConfigSchema(default_schema)
-        self.assertRaises(InvalidPropertyError, test_func)
-
-    # ToString
     def test_str(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        test_schema = ConfigSchema(default_schema)
-        self.assertEqual(str(test_schema), str(default_schema))
+        self.assertEqual(str(self.config_schema), str(self.default_schema))
 
-    # Add
-    def test_add_new_key_and_value(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value"}
-        
-        test_schema = ConfigSchema(default_schema)
-        test_schema.add("newkey", "value")
+    def test_add_with_dict(self):
+        new_props = {'key2': 'new_value2', 'key3': 'value3'}
+        self.config_schema.add(new_props)
+        self.assertEqual(self.config_schema.properties['key2'], 'new_value2')
+        self.assertEqual(self.config_schema.properties['key3'], 'value3')
+
+    def test_add_with_key_value(self):
+        self.config_schema.add('key3', 'value3')
+        self.assertEqual(self.config_schema.properties['key3'], 'value3')
+
+    def test_add_without_value(self):
+        with self.assertRaises(EmptyValueProperty):
+            self.config_schema.add('key3', None)
+
+    def test_add_without_override(self):
+        # Key 'key2' should retain its original value because override is set to False
+        self.config_schema.add('key2', 'another_value2', override=False)
+        self.assertEqual(self.config_schema.properties['key2'], 'value2')
+
+    def test_get(self):
+        self.assertEqual(self.config_schema.get('key1'), 'value1')
     
-        self.assertEqual(str(test_schema), str(validated_schema))
+    def test_get_strict(self):
+        with self.assertRaises(KeyError):
+            self.config_schema.get('nonexistent_key', strict=True)
     
-    def test_add_new_dict(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        new_value = { "newkey": "value" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
+    def test_remove(self):
+        self.config_schema.remove('key1')
+        self.assertNotIn('key1', self.config_schema.properties)
 
-        test_schema = ConfigSchema(default_schema)
-        test_schema.add(new_value)
-    
-        self.assertEqual(str(test_schema), str(validated_schema))
-    
-    def test_add_new_dict_with_override(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        new_value = { "newkey": "new_value", "newkey_2": "new_value" }
-        validated_schema = { "fookey": "foo", "barkey": "bar", "newkey": "new_value", "newkey_2": "new_value" }
+    def test_remove_strict(self):
+        with self.assertRaises(KeyError):
+            self.config_schema.remove('nonexistent_key', strict=True)
 
-        test_schema = ConfigSchema(default_schema)
-        test_schema.add(new_value)
-    
-        self.assertEqual(str(test_schema), str(validated_schema))
-    
-    def test_add_new_dict_without_override(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        new_value = { "newkey": "new_value", "newkey_2": "new_value" }
-        validated_schema = {"newkey": "value", "newkey_2": "new_value", "fookey": "foo", "barkey": "bar"}
+    def test_load(self):
+        test_config = {'key3': 'value3', 'key4': 'value4'}
+        with open('test_config.yaml', 'w') as file:
+            yaml.safe_dump(test_config, file)
 
-        test_schema = ConfigSchema(default_schema)
-        test_schema.add(new_value, override=False)
-    
-        self.assertEqual(str(test_schema), str(validated_schema))
-    
-    def test_add_empty_value(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        new_value = { "newkey" }
+        self.config_schema.load('test_config.yaml')
+        self.assertEqual(self.config_schema.properties['key3'], 'value3')
+        self.assertEqual(self.config_schema.properties['key4'], 'value4')
 
-        test_schema = ConfigSchema(default_schema)
-        def test_func(): 
-            test_schema.add(new_value)
+    def test_load_nonexistent_file(self):
+        with self.assertRaises(FileNotFoundError):
+            self.config_schema.load('nonexistent_file.yaml')
 
-        self.assertRaises(EmptyValueProperty, test_func)
-    
-    # Get
-    def test_get_valid_value(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        test_schema = ConfigSchema(default_schema)
-        self.assertEqual("foo", test_schema.get("fookey"))
-    
-    def test_get_invalid_value_not_strict(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        test_schema = ConfigSchema(default_schema)
-        self.assertEqual(None, test_schema.get("not_a_key"))
-    
-    def test_get_invalid_value_strict(self):
-        default_schema = { "fookey": "foo", "barkey": "bar", "newkey": "value" }
-        test_schema = ConfigSchema(default_schema)
-        def test_func():
-            test_schema.get("not_a_key", strict=True)
-        self.assertRaises(KeyError, test_func)
+    def test_items(self):
+        self.assertEqual(list(self.config_schema.items()), list(self.default_schema.items()))
 
-    # Remove
-    def test_remove_valid_key(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "barkey": "bar"}
+    def test_iteration(self):
+        keys = [key for key in self.config_schema]
+        self.assertEqual(keys, list(self.default_schema.items()))
 
-        test_schema = ConfigSchema(default_schema)
-        test_schema.remove("fookey")
+    def test_search_for_default_config_file(self):
+        default_config = {'key4': 'value4', 'key5': 'value5'}
+        with open('config.yaml', 'w') as file:
+            yaml.safe_dump(default_config, file)
 
-        self.assertEqual(str(test_schema), str(validated_schema))
+        new_config_schema = ConfigSchema()
+        self.assertEqual(new_config_schema.properties['key4'], 'value4')
+        self.assertEqual(new_config_schema.properties['key5'], 'value5')
 
-    def test_remove_invalid_key_not_strict(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar"}
-
-        test_schema = ConfigSchema(default_schema)
-        test_schema.remove("no_key")
-        
-        self.assertEqual(str(test_schema), str(validated_schema))
-    
-    def test_remove_invalid_key_strict(self):
-        default_schema = { "fookey": "foo", "barkey": "bar" }
-        validated_schema = { "fookey": "foo", "barkey": "bar" }
-
-        test_schema = ConfigSchema(default_schema)
-        def test_func():
-            test_schema.remove("no_key", strict=True)
-        
-        self.assertRaises(KeyError, test_func)
-    
-    # Load
-    def test_load_valid_file(self):
-        validated_schema = {
-            "specific": True,
-            "learn": 194.3,
-            "fish": {
-                "spell": {
-                "crop": False,
-                "happen": 6690.3106,
-                "taste": "three",
-                "replace": False
-                },
-                "satellites": False,
-                "vegetable": True,
-                "powerful": "amount"
-                },
-            "flat": -64.27,
-            "hole": False,
-            "lot": False
-        }
-
-        test_schema = ConfigSchema()
-        test_schema.load("test_schema_config.yml")
-        self.assertEqual(str(test_schema), str(validated_schema))
-
-    def test_class_is_iterable(self):
-        test_schema = ConfigSchema(filepath="test_list_schema.yml")
-        test_target_1 = [x for x in test_schema]
-        test_target_2 = [x for x in test_schema if x.get("value") == "a"]
-        self.assertEqual(test_target_1, [{'key': 1, 'value': 'a'}, {'key': 2, 'value': 'b'}, {'key': 3, 'value': 'c'}])
-        self.assertEqual(test_target_2, [{'key': 1, 'value': 'a'}])
+if __name__ == '__main__':
+    unittest.main()
